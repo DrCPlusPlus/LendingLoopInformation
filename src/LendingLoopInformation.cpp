@@ -1032,7 +1032,10 @@ void LendingLoopInformation::buildAllPaymentsOrig(){
     g_object_set_data(G_OBJECT(grid), "selectedIndices", &_allPaymentsGridSelectedIndices);
     g_object_set_data(G_OBJECT(grid), "useFilterMenu", _TrueVal);
     g_object_set_data(G_OBJECT(grid), "useLoanSummaryMenu", _TrueVal);
-    gtk_tree_view_set_search_column(GTK_TREE_VIEW(grid), 1);
+    gint column = 1;
+    if (_manipulator->isEntityType())
+        column = 2;
+    gtk_tree_view_set_search_column(GTK_TREE_VIEW(grid), column);
     
 }
 
@@ -1926,7 +1929,10 @@ void LendingLoopInformation::calendarCallback(DateTime dt, DateTime dt2, bool is
     lli->clearAllPaymentsGridSelection();
 
     gtk_tree_view_set_model(GTK_TREE_VIEW(lli->_allPaymentsGrid), GTK_TREE_MODEL(ls));
-    gtk_tree_view_set_search_column(GTK_TREE_VIEW(lli->_allPaymentsGrid), 1);
+    gint column = 1;
+    if (lli->_manipulator->isEntityType())
+        column = 2;
+    gtk_tree_view_set_search_column(GTK_TREE_VIEW(lli->_allPaymentsGrid), column);
     g_object_unref(ls);
     // ensure all filter options are unchecked
     lli->_suppressEvent = true;
@@ -1948,7 +1954,10 @@ void LendingLoopInformation::miAllFilter_Click(GtkWidget* widget, gpointer data)
     lli->clearAllPaymentsGridSelection();
 
     gtk_tree_view_set_model(GTK_TREE_VIEW(lli->_allPaymentsGrid), GTK_TREE_MODEL(lli->_allPaymentsModel));
-    gtk_tree_view_set_search_column(GTK_TREE_VIEW(lli->_allPaymentsGrid), 1);
+    gint column = 1;
+    if (lli->_manipulator->isEntityType())
+        column = 2;
+    gtk_tree_view_set_search_column(GTK_TREE_VIEW(lli->_allPaymentsGrid), column);
 
 }
 
@@ -2014,7 +2023,10 @@ void LendingLoopInformation::miFilter_Click(GtkWidget* widget, gpointer data){
     lli->clearAllPaymentsGridSelection();
 
     gtk_tree_view_set_model(GTK_TREE_VIEW(lli->_allPaymentsGrid), GTK_TREE_MODEL(ls));
-    gtk_tree_view_set_search_column(GTK_TREE_VIEW(lli->_allPaymentsGrid), 1);
+    gint column = 1;
+    if (lli->_manipulator->isEntityType())
+        column = 2;
+    gtk_tree_view_set_search_column(GTK_TREE_VIEW(lli->_allPaymentsGrid), column);
     g_object_unref(ls);
 }
 

@@ -168,7 +168,7 @@ bool LenderManipulator::isEntityType(string header){
 
 bool LenderManipulator::isCompanyType() const {
     return Utility::Where(_paymentsHeaders, [](string const& s)->bool{ 
-                return s.find("Company") != string::npos;}).size() > 0;;
+                return s.find("Company") != string::npos;}).size() > 0;
 }
 
 bool LenderManipulator::isCompanyType(string header){
