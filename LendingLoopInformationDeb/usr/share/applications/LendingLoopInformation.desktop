@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Lending Loop Information
+Icon=ll.png
+StartupNotify=true
+Exec=/usr/bin/LendingLoopInformation
