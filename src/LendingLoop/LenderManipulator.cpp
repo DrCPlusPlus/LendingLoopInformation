@@ -254,6 +254,9 @@ LenderManipulator* LenderManipulator::CreateManipulator(stringstream& reader, ve
         throw err;
     }
 
+    if (manipulator->_lines.size() == 0)
+        throw string("No Data!");
+        
     manipulator->_all_paymentsCsv = sb;
 
     manipulator->_contractTotalFees = 0.0;
