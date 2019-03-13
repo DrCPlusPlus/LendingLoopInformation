@@ -234,7 +234,8 @@ LenderManipulator* LenderManipulator::CreateManipulator(stringstream& reader, ve
                         stod(parts[14]), parts[15], parts[16], Utility::Replace(parts[17], "\r", ""));
                 }
                 else{
-                    // nothing to do in this case for now
+                    // alert the user
+                    throw "Data does not conform to expected input";
                 }
 
                 manipulator->_lines.push_back(item);
@@ -243,10 +244,14 @@ LenderManipulator* LenderManipulator::CreateManipulator(stringstream& reader, ve
             sb += "\n";
         }
     }
+    catch (char const* err){
+        string error = "Error parsing data - " + string(err);
+        throw error;
+    }
     catch (...){
         string err = "Error parsing data - ";
         err += line; 
-        throw err.c_str();
+        throw err;
     }
 
     manipulator->_all_paymentsCsv = sb;

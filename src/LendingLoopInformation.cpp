@@ -273,13 +273,22 @@ void LendingLoopInformation::openFile(GtkWidget* widget, gpointer data){
     }
     else{
         gtk_widget_hide(GTK_WIDGET(lli->_openFileDialog));
+
+        LenderManipulator* lm = nullptr;
+        try{
+            vector<PulledParts> pp;
+        
+            lm = LenderManipulator::CreateManipulator(filename, pp);
+        }
+        catch (string const& err){
+            MessageBox::Show(lli->_window, MessageBox::MessageBoxType::ERROR, MessageBox::MessageBoxButtons::OK, err, "Error Opening File!");
+            return;
+        }
         if (lli->_loopConn)
             lli->_loopConn->Abort();
         if (lli->_manipulator)
             delete lli->_manipulator;
-        vector<PulledParts> pp;
         
-        lli->_manipulator = LenderManipulator::CreateManipulator(filename, pp);
         for (auto& x : lli->_loanSummaryTabActiveGridLines)
             delete x;
 
@@ -288,7 +297,7 @@ void LendingLoopInformation::openFile(GtkWidget* widget, gpointer data){
 
         lli->_loanSummaryTabActiveGridLines.clear();
         lli->_loanSummaryTabActiveGridSelectedIndices.clear();
-
+        lli->_manipulator = lm;
         gtk_widget_destroy(lli->_tabs);
         lli->_tabs = gtk_notebook_new();
         gtk_notebook_set_scrollable(GTK_NOTEBOOK(lli->_tabs), TRUE);
