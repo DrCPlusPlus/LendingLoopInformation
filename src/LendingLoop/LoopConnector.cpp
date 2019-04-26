@@ -33,7 +33,7 @@ using namespace std;
 
 void LoopConnector::processDashboard() {
 	
-	ResponseData data = getWebData("https://www.lendingloop.ca/investor-profile");
+	ResponseData data = getWebData("https://my.lendingloop.ca/investor-profile");
 	string strToFind = "<td>Annual Investment Limit Remaining</td>";
 	string limit = data.HTMLData.substr(data.HTMLData.find(strToFind) + strToFind.size());
 	strToFind = "<td>";
@@ -123,7 +123,7 @@ string LoopConnector::GetAllPayments() {
 }
 
 string LoopConnector::getPayments() {
-	ResponseData returnData = getWebData("https://www.lendingloop.ca/payment_schedule_polling");
+	ResponseData returnData = getWebData("https://my.lendingloop.ca/payment_schedule_polling");
 	string uuid = returnData.HTMLData.substr(returnData.HTMLData.find("\"uuid\":\"") + 8);
 	uuid = uuid.substr(0, uuid.find("\""));
 	//!!!!!!
@@ -137,7 +137,7 @@ string LoopConnector::getPayments() {
 		if (_dieThread)
 			return "";
 
-		returnData = getWebData("https://www.lendingloop.ca/polling/" + uuid);
+		returnData = getWebData("https://my.lendingloop.ca/polling/" + uuid);
 		if (returnData.StatusCode != WebConnector::HTTPStatusCode::NoContent)
 			break;
 	}
@@ -149,7 +149,7 @@ string LoopConnector::getPayments() {
 
 	for (int i = 0; i < 3; ++i) {
 		try {
-			ResponseData rd = getWebData("https://www.lendingloop.ca/payment_schedule/download/" + uuid + ".csv");
+			ResponseData rd = getWebData("https://my.lendingloop.ca/payment_schedule/download/" + uuid + ".csv");
 			if (rd.StatusCode == WebConnector::HTTPStatusCode::OK) {
 				paymentsData = rd.HTMLData;
 				break;
@@ -169,7 +169,7 @@ string LoopConnector::getPayments() {
 bool LoopConnector::LogIn() {
 	_loggedIn = false;
 	try {
-		ResponseData data = getWebData("https://www.lendingloop.ca/users/sign_in");
+		ResponseData data = getWebData("https://my.lendingloop.ca/users/sign_in");
 		//!!!!!!!!!!!!!!!!!!!!!!!
 		//cout << __PRETTY_FUNCTION__ << " response = " << data.HTMLData << endl;
 
@@ -181,7 +181,7 @@ bool LoopConnector::LogIn() {
 		sb += WebConnector::EscapeDataString(_password);
 		sb += "&user%5Bremember_me%5D=0&commit=Log+In";
 
-		data = getWebData("https://www.lendingloop.ca/users/sign_in", sb);
+		data = getWebData("https://my.lendingloop.ca/users/sign_in", sb);
 
 		while (data.IsRedirect)
 			data = getWebData(data.NewURL);
@@ -208,7 +208,7 @@ void LoopConnector::Refresh() {
 		return;
 	}
 
-	ResponseData data = getWebData("https://www.lendingloop.ca/dashboard");
+	ResponseData data = getWebData("https://my.lendingloop.ca/dashboard");
 	while (data.StatusCode == WebConnector::HTTPStatusCode::Redirect)
 		data = getWebData(data.NewURL);
 
@@ -230,10 +230,10 @@ vector<PulledParts> LoopConnector::getPullData(){
 	vector<PulledParts> list;
 	try{
 		
-		ResponseData active = getWebData("https://www.lendingloop.ca/pull_active_loanparts");
-        ResponseData repaid = getWebData("https://www.lendingloop.ca/pull_repaid_loanparts");
-        ResponseData delinquent = getWebData("https://www.lendingloop.ca/pull_delinquent_loanparts");
-        ResponseData chargedOff = getWebData("https://www.lendingloop.ca/pull_charged_off_loanparts");
+		ResponseData active = getWebData("https://my.lendingloop.ca/pull_active_loanparts");
+        ResponseData repaid = getWebData("https://my.lendingloop.ca/pull_repaid_loanparts");
+        ResponseData delinquent = getWebData("https://my.lendingloop.ca/pull_delinquent_loanparts");
+        ResponseData chargedOff = getWebData("https://my.lendingloop.ca/pull_charged_off_loanparts");
 
 		vector<PulledParts> l = pullApartPulledParts(active.HTMLData);
 		list.insert(list.end(), l.begin(), l.end());

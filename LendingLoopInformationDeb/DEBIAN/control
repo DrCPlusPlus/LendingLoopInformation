@@ -1,5 +1,5 @@
 Package: LendingLoopInformation
-Version: 0.2
+Version: 0.3
 Maintainer: Jon Fowler
 Architecture: all
 Description: A program for interpreting the payment schedule from Lending Loop

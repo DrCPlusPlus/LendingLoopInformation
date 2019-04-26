@@ -29,7 +29,7 @@ using namespace std;
 
 
 BrowserLaunch::BrowserLaunch(Options& o, LoopConnector& loopConnector): _loopConnector(loopConnector){
-    _html_parts[0] = "<html><head><script type =\"text/javascript\">function go(){	var form = document.getElementById(\"new_user\"); form.submit();}</script></head><body onload=\"go();\"><div style=\"visibility:hidden;\"><form id=\"new_user\" action=\"https://www.lendingloop.ca/users/sign_in\" accept-charset=\"UTF-8\" method=\"post\" novalidate=\"novalidate\"><input name=\"utf8\" type=\"hidden\" value=\"✓\"><input type=\"hidden\" name=\"authenticity_token\" value=\"";
+    _html_parts[0] = "<html><head><script type =\"text/javascript\">function go(){	var form = document.getElementById(\"new_user\"); form.submit();}</script></head><body onload=\"go();\"><div style=\"visibility:hidden;\"><form id=\"new_user\" action=\"https://my.lendingloop.ca/users/sign_in\" accept-charset=\"UTF-8\" method=\"post\" novalidate=\"novalidate\"><input name=\"utf8\" type=\"hidden\" value=\"✓\"><input type=\"hidden\" name=\"authenticity_token\" value=\"";
     _html_parts[1] = "\"><input type=\"email\" value=\"";
     _html_parts[2] = "\" name=\"user[email]\" id=\"user_email\"><input type=\"password\" name=\"user[password]\" id=\"user_password\" value=\"";
     _html_parts[3] = "\"><input name=\"user[remember_me]\" type=\"hidden\" value=\"0\"><input type=\"checkbox\" value=\"1\" name=\"user[remember_me]\" id=\"user_remember_me\"></form></div></body></html>";
@@ -99,7 +99,7 @@ BrowserLaunch::BrowserLaunch(Options& o, LoopConnector& loopConnector): _loopCon
 
 string BrowserLaunch::getAuthenticityToken() const{
     try{
-        ResponseData data = _loopConnector.getWebData("https://www.lendingloop.ca/users/sign_in", "", false);
+        ResponseData data = _loopConnector.getWebData("https://my.lendingloop.ca/users/sign_in", "", false);
         return _loopConnector.getAuthenticityToken(data.HTMLData);
     }
     catch (char const* msg){
