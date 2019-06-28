@@ -330,8 +330,10 @@ void LendingLoopInformation::logIn(GtkWidget* widget, gpointer data){
 
         login->ShowDialog();
         if (login->getResult() == MessageBox::MessageBoxResult::rOK){
-            if (loopConn)
+            if (loopConn){
+                loopConn->Abort();
                 delete loopConn;
+            }
             lli->_loopConn = new LoopConnector(login->getEmail(), login->getPassword());
             loopConn = lli->_loopConn;
 
@@ -1745,6 +1747,8 @@ void LendingLoopInformation::GetAllPayments_Clicked(GtkWidget* widget, gpointer 
 gboolean LendingLoopInformation::GetAllPayments_Finishing(gpointer data){
     LendingLoopInformation* lli = (LendingLoopInformation*)data;
 
+    gtk_widget_set_sensitive(lli->_btnGetAllPayments, TRUE);
+    gtk_widget_set_sensitive(lli->_btnRefresh, TRUE);
     if (!lli->_threadError.empty()){
         MessageBox::Show(lli->_window, MessageBox::MessageBoxType::WARNING, MessageBox::MessageBoxButtons::OK, lli->_threadError, "Error");
         lli->updateStatus("Retrieve error!");
@@ -1756,8 +1760,7 @@ gboolean LendingLoopInformation::GetAllPayments_Finishing(gpointer data){
     lli->_manipulator = lli->_interimManipulator;
     lli->clearTabsExceptSummary();
     lli->populateTabs();
-    gtk_widget_set_sensitive(lli->_btnGetAllPayments, TRUE);
-    gtk_widget_set_sensitive(lli->_btnRefresh, TRUE);
+    
 
     gtk_widget_set_sensitive(GTK_WIDGET(lli->_miSaveAs), TRUE);
     lli->updateStatus("Loaded!");
