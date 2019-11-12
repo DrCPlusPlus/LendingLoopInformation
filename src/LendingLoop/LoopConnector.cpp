@@ -34,21 +34,21 @@ using namespace std;
 void LoopConnector::processDashboard() {
 	
 	ResponseData data = getWebData("https://my.lendingloop.ca/investor-profile");
-	string strToFind = "<td>Annual Investment Limit Remaining</td>";
+	string strToFind = "<span>Annual Investment Limit Remaining</span>";
 	string limit = data.HTMLData.substr(data.HTMLData.find(strToFind) + strToFind.size());
-	strToFind = "<td>";
+	strToFind = "<span>";
 	limit = limit.substr(limit.find(strToFind) + strToFind.size());
-	limit = limit.substr(0, limit.find("</td>"));
+	limit = limit.substr(0, limit.find("</span>"));
 	Utility::Replace(limit, "$", "");
 	Utility::Replace(limit, ",", "");
 	_dashboard.InvestmentLimit = stod(limit);
 
 	string strValue;
-	string partial = _dashboardDataRaw.substr(_dashboardDataRaw.find("<div class=\"col-md-9\">"));
-	partial = partial.substr(partial.find("<div class=\"text-center\">"));
-	partial = partial.substr(partial.find("<h2>") + 4);
+	string partial = _dashboardDataRaw.substr(_dashboardDataRaw.find("<span class=\"btn btn-lg btn-icon btn-soft-primary rounded-circle mr-4\">"));
+	strToFind = "<span class=\"d-block font-size-2\">";
+	partial = partial.substr(partial.find(strToFind) + strToFind.size());
 
-	strValue = partial.substr(0, partial.find("</h2>"));
+	strValue = partial.substr(0, partial.find("</span>"));
 	Utility::Replace(strValue, "$", "");
 	Utility::Replace(strValue, ",", "");
 	
@@ -57,12 +57,11 @@ void LoopConnector::processDashboard() {
 	}
 	catch (...) { }
 
-	strToFind = "<div class=\"text-center\">";
+	strToFind = "<span class=\"btn btn-lg btn-icon btn-soft-warning rounded-circle mr-4\">";
 	partial = partial.substr(partial.find(strToFind) + strToFind.size());
-	partial = partial.substr(partial.find(strToFind));
-	partial = partial.substr(partial.find("<h2>") + 4);
-
-	strValue = partial.substr(0, partial.find("</h2>"));
+	strToFind = "<span class=\"d-block font-size-2\">";
+	partial = partial.substr(partial.find(strToFind) + strToFind.size());
+	strValue = partial.substr(0, partial.find("</span>"));
 	Utility::Replace(strValue, "$", "");
 	Utility::Replace(strValue, ",", "");
 
@@ -232,7 +231,8 @@ vector<PulledParts> LoopConnector::getPullData(){
 		
 		ResponseData active = getWebData("https://my.lendingloop.ca/pull_active_loanparts");
         ResponseData repaid = getWebData("https://my.lendingloop.ca/pull_repaid_loanparts");
-        ResponseData delinquent = getWebData("https://my.lendingloop.ca/pull_delinquent_loanparts");
+        ResponseData late = getWebData("https://my.lendingloop.ca/pull_late_loanparts");
+		ResponseData defaultLoans = getWebData("https://my.lendingloop.ca/pull_default_loanparts");
         ResponseData chargedOff = getWebData("https://my.lendingloop.ca/pull_charged_off_loanparts");
 
 		vector<PulledParts> l = pullApartPulledParts(active.HTMLData);
@@ -241,7 +241,10 @@ vector<PulledParts> LoopConnector::getPullData(){
 		l = pullApartPulledParts(repaid.HTMLData);
 		list.insert(list.end(), l.begin(), l.end());
 
-		l = pullApartPulledParts(delinquent.HTMLData);
+		l = pullApartPulledParts(late.HTMLData);
+		list.insert(list.end(), l.begin(), l.end());
+
+		l = pullApartPulledParts(defaultLoans.HTMLData);
 		list.insert(list.end(), l.begin(), l.end());
 
 		l = pullApartPulledParts(chargedOff.HTMLData, "loan_rails_id");
@@ -267,8 +270,8 @@ vector<PulledParts> LoopConnector::pullApartPulledParts(string const& pulledPart
 		if (idx >= allParts.size())
 			break;
 		
-		string str = allParts[idx].substr(allParts[idx].find(':'));
-		str = str.substr(str.find('"') + 1);
+		string str = allParts[idx].substr(allParts[idx].find("\"" + alternateLoanId + "\":"));
+		str = str.substr(str.find(":\"") + 2);
 		str = str.substr(0, str.find('"'));
 		string loanId = str;
 
