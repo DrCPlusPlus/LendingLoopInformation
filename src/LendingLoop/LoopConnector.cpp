@@ -247,7 +247,7 @@ vector<PulledParts> LoopConnector::getPullData(){
 		l = pullApartPulledParts(defaultLoans.HTMLData);
 		list.insert(list.end(), l.begin(), l.end());
 
-		l = pullApartPulledParts(chargedOff.HTMLData, "loan_rails_id");
+		l = pullApartPulledParts(chargedOff.HTMLData);
 		list.insert(list.end(), l.begin(), l.end());
 	}
 	catch(...){
