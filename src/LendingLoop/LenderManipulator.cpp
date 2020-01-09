@@ -212,22 +212,24 @@ LenderManipulator* LenderManipulator::CreateManipulator(stringstream& reader, ve
                             PulledParts& pp = pps[0];
                             company = pp.Company();
                             loanName = pp.LoanName();
-                            line = parts[0];
-                            line += ',';
-                            line += parts[1];
-                            line += ',';
-                            if (company.find(',') != string::npos)
-                                line += "\"" + company + "\"";
-                            else
-                                line += company;
-                            line += ',';
-                            if (loanName.find(',') != string::npos)
-                                line += "\"" + loanName + "\"";
-                            else
-                                line += loanName;
-                            for (vector<string>::size_type idx = 3; idx < parts.size(); ++idx)
-                                line += "," + parts[idx];
                         }
+                        
+                        line = parts[0];
+                        line += ',';
+                        line += parts[1];
+                        line += ',';
+                        if (company.find(',') != string::npos)
+                            line += "\"" + company + "\"";
+                        else
+                            line += company;
+                        line += ',';
+                        if (loanName.find(',') != string::npos)
+                            line += "\"" + loanName + "\"";
+                        else
+                            line += loanName;
+                        for (vector<string>::size_type idx = 3; idx < parts.size(); ++idx)
+                            line += "," + parts[idx];
+                        
                     }
                     item = LineItem(stoul(parts[1]), stoul(parts[2]), company, loanName, stod(parts[3]), 
                         parts[4], stod(parts[5]), stod(parts[6]), stod(parts[7]), 
