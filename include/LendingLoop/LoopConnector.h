@@ -27,6 +27,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <LendingLoop/PulledParts.h>
+#include <map>
 
 class LoopConnector {
 	std::string _email;
@@ -71,8 +72,10 @@ public:
 
 	bool LogIn();
 	void Refresh();
-	std::string getAuthenticityToken(std::string const& data);
+	
+	// Gets a valid idToken and constructs the url to redirect to
+	std::string GetAuthenitcatedURL();
 
-	ResponseData getWebData(std::string const& url, std::string const& requestBody = "", bool useLastCookie = true);
+	ResponseData getWebData(std::string const& url, std::map<std::string, std::string> const& headers, std::string const& requestBody = "", bool useLastCookie = true);
 
 };

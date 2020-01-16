@@ -528,7 +528,7 @@ void LendingLoopInformation::buildOnlineSummary(){
 
 void LendingLoopInformation::OpenDashboard_Clicked(GtkWidget* widget, gpointer data){
     LendingLoopInformation* lli = (LendingLoopInformation*)data;
-    BrowserLaunch(lli->_options, *lli->_loopConn);
+    BrowserLaunch::Launch(lli->_options, *lli->_loopConn);
 }
 
 void LendingLoopInformation::populateTabs(){

@@ -25,6 +25,7 @@
 #include <exception>
 #include <thread>
 #include <algorithm>
+#include "Base64.h"
 
 //!!!!!!!!!
 #include <iostream>
@@ -32,8 +33,8 @@
 using namespace std;
 
 void LoopConnector::processDashboard() {
-	
-	ResponseData data = getWebData("https://my.lendingloop.ca/investor-profile");
+	map<string, string> dummymap;
+	ResponseData data = getWebData("https://my.lendingloop.ca/investor-profile", dummymap);
 	string strToFind = "<span>Annual Investment Limit Remaining</span>";
 	string limit = data.HTMLData.substr(data.HTMLData.find(strToFind) + strToFind.size());
 	strToFind = "<span>";
@@ -122,7 +123,8 @@ string LoopConnector::GetAllPayments() {
 }
 
 string LoopConnector::getPayments() {
-	ResponseData returnData = getWebData("https://my.lendingloop.ca/payment_schedule_polling");
+	map<string, string> dummymap;
+	ResponseData returnData = getWebData("https://my.lendingloop.ca/payment_schedule_polling", dummymap);
 	string uuid = returnData.HTMLData.substr(returnData.HTMLData.find("\"uuid\":\"") + 8);
 	uuid = uuid.substr(0, uuid.find("\""));
 	//!!!!!!
@@ -136,7 +138,7 @@ string LoopConnector::getPayments() {
 		if (_dieThread)
 			return "";
 
-		returnData = getWebData("https://my.lendingloop.ca/polling/" + uuid);
+		returnData = getWebData("https://my.lendingloop.ca/polling/" + uuid, dummymap);
 		if (returnData.StatusCode != WebConnector::HTTPStatusCode::NoContent)
 			break;
 	}
@@ -148,7 +150,7 @@ string LoopConnector::getPayments() {
 
 	for (int i = 0; i < 3; ++i) {
 		try {
-			ResponseData rd = getWebData("https://my.lendingloop.ca/payment_schedule/download/" + uuid + ".csv");
+			ResponseData rd = getWebData("https://my.lendingloop.ca/payment_schedule/download/" + uuid + ".csv", dummymap);
 			if (rd.StatusCode == WebConnector::HTTPStatusCode::OK) {
 				paymentsData = rd.HTMLData;
 				break;
@@ -168,22 +170,11 @@ string LoopConnector::getPayments() {
 bool LoopConnector::LogIn() {
 	_loggedIn = false;
 	try {
-		ResponseData data = getWebData("https://my.lendingloop.ca/users/sign_in");
-		//!!!!!!!!!!!!!!!!!!!!!!!
-		//cout << __PRETTY_FUNCTION__ << " response = " << data.HTMLData << endl;
-
-		string sb = "utf8=%E2%9C%93&authenticity_token=";
-		sb += WebConnector::EscapeDataString(getAuthenticityToken(data.HTMLData));
-		sb += "&user%5Bemail%5D=";
-		sb += WebConnector::EscapeDataString(_email);
-		sb += "&user%5Bpassword%5D=";
-		sb += WebConnector::EscapeDataString(_password);
-		sb += "&user%5Bremember_me%5D=0&commit=Log+In";
-
-		data = getWebData("https://my.lendingloop.ca/users/sign_in", sb);
+		
+		ResponseData data = getWebData(GetAuthenitcatedURL(), map<string, string>());
 
 		while (data.IsRedirect)
-			data = getWebData(data.NewURL);
+			data = getWebData(data.NewURL, map<string, string>());
 
 		if (data.HTMLData.find("<div id=\"flash_alert\">Invalid email or password.</div>") != string::npos)
 			return _loggedIn;
@@ -207,9 +198,10 @@ void LoopConnector::Refresh() {
 		return;
 	}
 
-	ResponseData data = getWebData("https://my.lendingloop.ca/dashboard");
+	map<string, string> dummymap;
+	ResponseData data = getWebData("https://my.lendingloop.ca/dashboard", dummymap);
 	while (data.StatusCode == WebConnector::HTTPStatusCode::Redirect)
-		data = getWebData(data.NewURL);
+		data = getWebData(data.NewURL, dummymap);
 
 	//we now have a logged in cookie! And the dashboard
 	_dashboardDataRaw = data.HTMLData;
@@ -228,12 +220,12 @@ vector<PulledParts> LoopConnector::GetPullData(){
 vector<PulledParts> LoopConnector::getPullData(){
 	vector<PulledParts> list;
 	try{
-		
-		ResponseData active = getWebData("https://my.lendingloop.ca/pull_active_loanparts");
-        ResponseData repaid = getWebData("https://my.lendingloop.ca/pull_repaid_loanparts");
-        ResponseData late = getWebData("https://my.lendingloop.ca/pull_late_loanparts");
-		ResponseData defaultLoans = getWebData("https://my.lendingloop.ca/pull_default_loanparts");
-        ResponseData chargedOff = getWebData("https://my.lendingloop.ca/pull_charged_off_loanparts");
+		map<string, string> dummymap;
+		ResponseData active = getWebData("https://my.lendingloop.ca/pull_active_loanparts", dummymap);
+        ResponseData repaid = getWebData("https://my.lendingloop.ca/pull_repaid_loanparts", dummymap);
+        ResponseData late = getWebData("https://my.lendingloop.ca/pull_late_loanparts", dummymap);
+		ResponseData defaultLoans = getWebData("https://my.lendingloop.ca/pull_default_loanparts", dummymap);
+        ResponseData chargedOff = getWebData("https://my.lendingloop.ca/pull_charged_off_loanparts", dummymap);
 
 		vector<PulledParts> l = pullApartPulledParts(active.HTMLData);
 		list.insert(list.end(), l.begin(), l.end());
@@ -297,25 +289,45 @@ vector<PulledParts> LoopConnector::pullApartPulledParts(string const& pulledPart
 	return list;
 }
 
-string LoopConnector::getAuthenticityToken(string const& data) {
-	string form = data.substr(data.find("<form"));
+std::string LoopConnector::GetAuthenitcatedURL(){
+	map<string, string> headers;
+	headers["Origin"] = "https://auth.lendingloop.ca";
+	headers["Referer"] = "https://auth.lendingloop.ca";
+	headers["Content-Type"] = "application/x-amz-json-1.1";
+	headers["X-Amz-Target"] = "AWSCognitoIdentityProviderService.InitiateAuth";
+	headers["X-Amz-User-Agent"] = "aws-amplify/0.1.x js";
+	
+	stringstream ss;
+	ss << "{\"AuthFlow\":\"USER_PASSWORD_AUTH\",\"ClientId\":\"40ucd6ae13ivsr44lpfo951i8m\",\"AuthParameters\":{\"USERNAME\":\"" << _email << "\",\"PASSWORD\":\"" << _password << "\"},\"ClientMetadata\":{}}";
+	
+	ResponseData data = getWebData("https://cognito-idp.ca-central-1.amazonaws.com/", headers, ss.str());
 
-	form = form.substr(form.find("authenticity_token\""));
-	form = form.substr(form.find("value=") + 7);
-	form = form.substr(0, form.find("\""));
+	string str2find = "\"IdToken\":";
+	string::size_type idx = data.HTMLData.find(str2find);
+	if (idx == string::npos)
+		throw "No IdToken";
 
-	return form;
+	string idToken = data.HTMLData.substr(idx + str2find.size());
+	idToken = idToken.substr(idToken.find("\"") + 1);
+	idToken = idToken.substr(0, idToken.find("\""));
+	stringstream newUrl;
+	newUrl << "https://my.lendingloop.ca/cognito-confirm-sign-in?id_token=" << idToken;
+
+	return newUrl.str();
 }
 
 void log(string const& msg){
 	cout << __PRETTY_FUNCTION__ << msg << endl;
 }
 
-ResponseData LoopConnector::getWebData(string const& url, string const& requestBody, bool useLastCookie) {
+ResponseData LoopConnector::getWebData(string const& url, std::map<std::string, std::string> const& headers, string const& requestBody, bool useLastCookie) {
 	ResponseData rd;
 
 	WebConnector wc(log);
 	wc.AddHeader("Accept-Encoding", "identity");
+
+	for(auto const& kvp : headers)
+		wc.AddHeader(kvp.first, kvp.second);
 
 	if (useLastCookie && !_lastCookie.empty())
 		wc.SetCookie(_lastCookie);

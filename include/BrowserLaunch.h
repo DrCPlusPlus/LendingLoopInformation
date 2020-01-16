@@ -26,12 +26,7 @@
 #include <Options.h>
 
 class BrowserLaunch{
-    std::string _html_parts[4];
-
-    LoopConnector& _loopConnector;
-
-    std::string getAuthenticityToken() const;
-
+    
 public:
-    BrowserLaunch(Options& o, LoopConnector& loopConnector);
+    static void Launch(Options& o, LoopConnector& loopConnector);
 };
