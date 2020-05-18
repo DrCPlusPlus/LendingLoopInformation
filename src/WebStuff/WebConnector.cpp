@@ -60,7 +60,7 @@ string WebConnector::performHTTPRequest(string const& url, string const& request
 	CURL* _curl = curl_easy_init();
 	
 	if (_curl) {
-		this->result.str();
+		this->result.str("");
 		curl_easy_setopt(_curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(_curl, CURLOPT_WRITEDATA, this);
 		curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, WebConnector::CurlCallback);
