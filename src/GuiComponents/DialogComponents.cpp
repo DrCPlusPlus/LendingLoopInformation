@@ -57,11 +57,13 @@ void DialogComponents::populateMapName(GObject* widget){
 void DialogComponents::populateMap(GObject* widget){
     populateMapName(widget);
     if (GTK_IS_CONTAINER(widget)){
-        GList* children = gtk_container_get_children(GTK_CONTAINER(widget));
+        GList* list = gtk_container_get_children(GTK_CONTAINER(widget));
+		GList* children = list;
         while(children){
             populateMap((GObject*)children->data);
             children = children->next;
         }
+		g_list_free(list);
     }
 }
 

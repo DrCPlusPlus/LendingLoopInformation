@@ -126,7 +126,8 @@ LendingLoopInformation::LendingLoopInformation(int argc, char*** argv):
 
     _tabs = gtk_notebook_new();
     _mainGrid = gtk_builder_get_object(builder, "gridMain");
-
+	g_object_unref(builder);
+	
     buildContextMenu();
 }
 
