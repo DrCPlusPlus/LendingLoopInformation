@@ -108,12 +108,16 @@ void LoopConnector::processDashboard() {
 }
 
 void LoopConnector::Abort(){
-	_dieThread = true;
-	_cv.notify_all();
+	_abort = true;
+	// send abort signal to wc
+	if (_wc)
+		_wc->Abort();
 }
 
 string LoopConnector::GetAllPayments() {
-	_dieThread = false;
+	if (_abort)
+		return "";
+	_abort = false;
 	if (!_loggedIn) {
 		if (!LogIn())
 			throw "Invalid Email and Password";
@@ -124,45 +128,24 @@ string LoopConnector::GetAllPayments() {
 
 string LoopConnector::getPayments() {
 	map<string, string> dummymap;
-	ResponseData returnData = getWebData("https://my.lendingloop.ca/payment_schedule_polling", dummymap);
-	string uuid = returnData.HTMLData.substr(returnData.HTMLData.find("\"uuid\":\"") + 8);
-	uuid = uuid.substr(0, uuid.find("\""));
-	//!!!!!!
-	//cout << "returnData = " << returnData.HTMLData << endl;
-	//cout << "uuid = " << uuid << endl;
-
-	while (!_dieThread) {
-		//this_thread::sleep_for(chrono::seconds(5));
-		unique_lock<mutex> lk(_m);
-		_cv.wait_for(lk, chrono::seconds(5));
-		if (_dieThread)
-			return "";
-
-		returnData = getWebData("https://my.lendingloop.ca/polling/" + uuid, dummymap);
-		if (returnData.StatusCode != WebConnector::HTTPStatusCode::NoContent)
-			break;
-	}
-
-	if (_dieThread)
-		return "";
 
 	string paymentsData = "";
 
-	for (int i = 0; i < 3; ++i) {
-		try {
-			ResponseData rd = getWebData("https://my.lendingloop.ca/payment_schedule/download/" + uuid + ".csv", dummymap);
-			if (rd.StatusCode == WebConnector::HTTPStatusCode::OK) {
-				paymentsData = rd.HTMLData;
-				break;
-			}
+	try {
+		ResponseData rd = getWebData("https://my.lendingloop.ca/payment_schedule/download/", dummymap, "", true, true);
+		if (_abort)
+			return "";
+		if (rd.StatusCode == WebConnector::HTTPStatusCode::OK) {
+			paymentsData = rd.HTMLData;
+			//break;
 		}
-		catch (exception const& ex) {
+	}
+	catch (exception const& ex) {
 
-		}
 	}
 
 	if (paymentsData.empty())
-		throw "Several attempts were made to retrieve the data but all failed!";
+		throw "Payments download failed!";
 
 	return paymentsData;
 }
@@ -209,6 +192,7 @@ void LoopConnector::Refresh() {
 }
 
 vector<PulledParts> LoopConnector::GetPullData(){
+	_abort = false;
 	if (!_loggedIn){
 		if (!LogIn())
 			throw "Invalid Email and Password";
@@ -221,11 +205,21 @@ vector<PulledParts> LoopConnector::getPullData(){
 	vector<PulledParts> list;
 	try{
 		map<string, string> dummymap;
-		ResponseData active = getWebData("https://my.lendingloop.ca/pull_active_loanparts", dummymap);
-        ResponseData repaid = getWebData("https://my.lendingloop.ca/pull_repaid_loanparts", dummymap);
-        ResponseData late = getWebData("https://my.lendingloop.ca/pull_late_loanparts", dummymap);
-		ResponseData defaultLoans = getWebData("https://my.lendingloop.ca/pull_default_loanparts", dummymap);
-        ResponseData chargedOff = getWebData("https://my.lendingloop.ca/pull_charged_off_loanparts", dummymap);
+		ResponseData active = getWebData("https://my.lendingloop.ca/pull_active_loanparts", dummymap, "", true, true);
+		if (_abort)
+			return list;
+        ResponseData repaid = getWebData("https://my.lendingloop.ca/pull_repaid_loanparts", dummymap, "", true, true);
+		if (_abort)
+			return list;
+        ResponseData late = getWebData("https://my.lendingloop.ca/pull_late_loanparts", dummymap, "", true, true);
+		if (_abort)
+			return list;
+		ResponseData defaultLoans = getWebData("https://my.lendingloop.ca/pull_default_loanparts", dummymap, "", true, true);
+		if (_abort)
+			return list;
+        ResponseData chargedOff = getWebData("https://my.lendingloop.ca/pull_charged_off_loanparts", dummymap, "", true, true);
+		if (_abort)
+			return list;
 
 		vector<PulledParts> l = pullApartPulledParts(active.HTMLData);
 		list.insert(list.end(), l.begin(), l.end());
@@ -320,10 +314,12 @@ void log(string const& msg){
 	cout << __PRETTY_FUNCTION__ << msg << endl;
 }
 
-ResponseData LoopConnector::getWebData(string const& url, std::map<std::string, std::string> const& headers, string const& requestBody, bool useLastCookie) {
+ResponseData LoopConnector::getWebData(string const& url, std::map<std::string, std::string> const& headers, string const& requestBody, bool useLastCookie, bool setGlobalWC) {
 	ResponseData rd;
 
 	WebConnector wc(log);
+	if (setGlobalWC)
+		_wc = & wc;
 	wc.AddHeader("Accept-Encoding", "identity");
 
 	for(auto const& kvp : headers)
@@ -355,5 +351,7 @@ ResponseData LoopConnector::getWebData(string const& url, std::map<std::string, 
 	}
 	
 	rd.StatusCode = wc.RepsonseCode();
+	if (setGlobalWC)
+		_wc = nullptr;
 	return rd;
 }

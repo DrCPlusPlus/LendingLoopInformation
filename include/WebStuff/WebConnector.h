@@ -52,6 +52,7 @@ private:
 	std::map<std::string, std::string> _responseHeaders;
 	std::string _cookie;
 	std::string _requestBody;
+	bool _abortCalled;
 	
 	//make non copyable
 	WebConnector(WebConnector const& wc) = delete;
@@ -75,6 +76,7 @@ public:
 	void ClearRequestHeaders() { _requestHeaders.clear(); }
 	void SetCookie(std::string const& cookie) { _cookie = cookie; }
 	void ClearCookie() { _cookie = ""; }
+	void Abort();
 };
 
 #endif

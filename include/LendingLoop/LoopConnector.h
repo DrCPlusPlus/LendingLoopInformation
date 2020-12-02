@@ -35,10 +35,8 @@ class LoopConnector {
 	std::string _lastCookie;
 	std::string _dashboardDataRaw;
 
-	bool _dieThread;
-	std::mutex _m;
-	std::condition_variable _cv;
-
+	bool _abort;
+	WebConnector* _wc;
 
 	DashboardData _dashboard;
 	bool _loggedIn;
@@ -52,7 +50,7 @@ class LoopConnector {
 public:
 	
 	LoopConnector(std::string const& email, std::string const& password) : _email(email), _password(password), _lastCookie(), 
-				_dashboardDataRaw(), _dashboard(), _loggedIn(false), _dieThread(false), _cv(), _m() {
+				_dashboardDataRaw(), _dashboard(), _loggedIn(false), _abort(false), _wc(nullptr) {
 
 	}
 	~LoopConnector() {
@@ -76,6 +74,6 @@ public:
 	// Gets a valid idToken and constructs the url to redirect to
 	std::string GetAuthenitcatedURL();
 
-	ResponseData getWebData(std::string const& url, std::map<std::string, std::string> const& headers, std::string const& requestBody = "", bool useLastCookie = true);
+	ResponseData getWebData(std::string const& url, std::map<std::string, std::string> const& headers, std::string const& requestBody = "", bool useLastCookie = true, bool setGlobalWC = false);
 
 };

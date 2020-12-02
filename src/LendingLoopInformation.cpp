@@ -49,7 +49,7 @@ LendingLoopInformation::LendingLoopInformation(int argc, char*** argv):
         _allPaymentsGridSelectedIndices(), _cm(nullptr), _activeGridLines(nullptr), _activeGridSelectedIndices(nullptr),
         _displayedLinesUnpaid(), _unpaidPaymentsGridSelectedIndices(), _FalseVal(new bool(false)), _TrueVal(new bool(true)),
          _filters(), _allPaymentsLines(), _allPaymentsModel(nullptr), _suppressEvent(false), 
-        _loanSummaryTabActiveGridLines(), _loanSummaryTabActiveGridSelectedIndices(){
+        _loanSummaryTabActiveGridLines(), _loanSummaryTabActiveGridSelectedIndices(), _miLogin(nullptr){
     gtk_init(&argc, argv);
 
     GtkBuilder* builder;
@@ -80,6 +80,7 @@ LendingLoopInformation::LendingLoopInformation(int argc, char*** argv):
     GObject* menuItem;
     menuItem = gtk_builder_get_object(builder, "miLogIn");
     g_signal_connect(menuItem, "activate", G_CALLBACK(LendingLoopInformation::logIn), this);
+	_miLogin = GTK_WIDGET(menuItem);
 
     menuItem = gtk_builder_get_object(builder, "miExit");
     g_signal_connect_swapped(menuItem, "activate", G_CALLBACK(gtk_widget_hide), _window);
@@ -151,13 +152,14 @@ LendingLoopInformation::~LendingLoopInformation(){
 
     if (_loopConn){
         _loopConn->Abort();
+		if (_t.joinable())
+        	_t.join();
         delete _loopConn;
     }
     if (_manipulator)
         delete _manipulator;
 
-    if (_t.joinable())
-        _t.join();
+    
 }
 
 void LendingLoopInformation::buildContextMenu(){
@@ -1736,6 +1738,7 @@ void LendingLoopInformation::GetAllPayments_Clicked(GtkWidget* widget, gpointer 
         lli->updateStatus("Retrieving data...");
         gtk_widget_set_sensitive(lli->_btnGetAllPayments, FALSE);
         gtk_widget_set_sensitive(lli->_btnRefresh, FALSE);
+		gtk_widget_set_sensitive(lli->_miLogin, FALSE);
         if (lli->_t.joinable())
             lli->_t.join();
         lli->_t = thread(&LendingLoopInformation::getAllPaymentsTask, lli);
@@ -1750,6 +1753,7 @@ gboolean LendingLoopInformation::GetAllPayments_Finishing(gpointer data){
 
     gtk_widget_set_sensitive(lli->_btnGetAllPayments, TRUE);
     gtk_widget_set_sensitive(lli->_btnRefresh, TRUE);
+	gtk_widget_set_sensitive(lli->_miLogin, TRUE);
     if (!lli->_threadError.empty()){
         MessageBox::Show(lli->_window, MessageBox::MessageBoxType::WARNING, MessageBox::MessageBoxButtons::OK, lli->_threadError, "Error");
         lli->updateStatus("Retrieve error!");

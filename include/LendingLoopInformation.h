@@ -62,6 +62,7 @@ class LendingLoopInformation{
     GtkWidget* _btnNextBlank;
     GtkWidget* _btnPrevBlank;
     GtkWidget* _allPaymentsGrid;
+	GtkWidget* _miLogin;
 
     CalendarPopUp* _calPop;
     

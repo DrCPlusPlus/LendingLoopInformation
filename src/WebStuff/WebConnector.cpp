@@ -35,6 +35,8 @@ size_t WebConnector::CurlCallback(char* ptr, size_t size, size_t nmemb, void* us
 	for (size_t i = 0; i < nmemb; ++i)
 		wc->result << ptr[i];
 
+	if (wc->_abortCalled)
+		return nmemb - 1;		// force a CURLE_WRITE_ERROR to stop transfer
 	return nmemb;
 }
 
@@ -56,10 +58,15 @@ size_t WebConnector::CurlHeaderCallback(char* buffer, size_t size, size_t nitems
 	return size * nitems;
 }
 
+void WebConnector::Abort(){
+	_abortCalled = true;
+}
+
 string WebConnector::performHTTPRequest(string const& url, string const& requestBody){
 	CURL* _curl = curl_easy_init();
 	
 	if (_curl) {
+		_abortCalled = false;
 		this->result.str("");
 		curl_easy_setopt(_curl, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(_curl, CURLOPT_WRITEDATA, this);
@@ -88,7 +95,7 @@ string WebConnector::performHTTPRequest(string const& url, string const& request
 		}
 
 		CURLcode res = curl_easy_perform(_curl);
-		if (res != CURLE_OK && dataLogger) {
+		if (!_abortCalled && res != CURLE_OK && dataLogger) {
 			string msg = "curl_easy_perform() failed: " + url + " ";
 			msg += curl_easy_strerror(res);
 			dataLogger(msg);
@@ -106,7 +113,7 @@ string WebConnector::performHTTPRequest(string const& url, string const& request
 	return this->result.str();
 }
 
-WebConnector::WebConnector(DataLogger logger) : dataLogger(logger), responseCode(HTTPStatusCode::NoCode), _requestHeaders(), _responseHeaders() {
+WebConnector::WebConnector(DataLogger logger) : dataLogger(logger), responseCode(HTTPStatusCode::NoCode), _requestHeaders(), _responseHeaders(), _abortCalled(false) {
 	std::lock_guard<std::mutex> lk(_mutex);
 	if (!curlInitialized) {
 		curl_global_init(CURL_GLOBAL_DEFAULT);
