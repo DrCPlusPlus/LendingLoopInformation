@@ -169,6 +169,7 @@ public:
     static gint ContextMenu_Show(GtkWidget* widget, GdkEvent* event, gpointer data);
     static void miSummaryPopUp(GtkWidget* widget, gpointer data);
     static void miTodaysDate(GtkWidget* widget, gpointer data);
+	static void miYesterdaysDate(GtkWidget* widget, gpointer data);
     static void miCalendarPopUp(GtkWidget* widget, gpointer data);
     static void calendarCallback(DateTime dt, DateTime dt2, bool isRange, void* data);
     

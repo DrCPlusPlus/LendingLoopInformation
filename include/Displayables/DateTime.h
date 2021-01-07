@@ -78,6 +78,21 @@ public:
         AddDays(1);
     }
 
+	void SubtractDays(int nDays){
+        int days = 86400 * nDays;
+        time_t thisTimeAsSeconds = convertToTimeStamp();
+        thisTimeAsSeconds -= days;
+        struct tm newDay = { 0 };
+        newDay = *::localtime(&thisTimeAsSeconds);
+        _year = newDay.tm_year + 1900;
+        _day = newDay.tm_mday;
+        _month = newDay.tm_mon + 1;
+    }
+
+    void SubtractDay(){
+        SubtractDays(1);
+    }
+
     bool operator < (DateTime const& rhs) const {
         return this->convertToTimeStamp() < rhs.convertToTimeStamp();
     }
@@ -101,6 +116,17 @@ public:
     bool operator >= (DateTime const& rhs) const {
         return ( *this == rhs || *this > rhs);
     }
+
+	DateTime operator --(int) {
+		DateTime dt = *this;
+		this->SubtractDay();
+		return dt;
+	}
+
+	DateTime& operator --() {
+		this->SubtractDay();
+		return *this;
+	}
 
     static std::vector<DateTime> GetDateRange(DateTime const& dt, DateTime const& dt2){
         std::vector<DateTime> dates;

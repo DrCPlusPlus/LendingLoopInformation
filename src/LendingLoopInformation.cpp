@@ -196,12 +196,15 @@ void LendingLoopInformation::buildContextMenu(){
 
     GtkWidget* miDatePaid = gtk_menu_item_new_with_label("By Date Paid");
     GtkWidget* miTodaysDate = gtk_menu_item_new_with_label("Today");
+	GtkWidget* miYesterdaysDate = gtk_menu_item_new_with_label("Yesterday");
     GtkWidget* miCalendar = gtk_menu_item_new_with_label("Select...");
     g_signal_connect(miCalendar, "activate", G_CALLBACK(LendingLoopInformation::miCalendarPopUp), this);
     g_signal_connect(miTodaysDate, "activate", G_CALLBACK(LendingLoopInformation::miTodaysDate), this);
+	g_signal_connect(miYesterdaysDate, "activate", G_CALLBACK(LendingLoopInformation::miYesterdaysDate), this);
     
     ContextMenu datePaid;
     datePaid.AddChild(miTodaysDate);
+	datePaid.AddChild(miYesterdaysDate);
     datePaid.AddChild(miCalendar);
     datePaid.ShowAllChildren();
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(miDatePaid), datePaid.GetMenu());
@@ -1867,6 +1870,12 @@ void LendingLoopInformation::miSummaryPopUp(GtkWidget* widget, gpointer data){
 void LendingLoopInformation::miTodaysDate(GtkWidget* widget, gpointer data){
     LendingLoopInformation* lli = (LendingLoopInformation*)data;
     DateTime dt = DateTime::Now();
+    LendingLoopInformation::calendarCallback(dt, DateTime(), false, data);
+}
+
+void LendingLoopInformation::miYesterdaysDate(GtkWidget* widget, gpointer data){
+    LendingLoopInformation* lli = (LendingLoopInformation*)data;
+    DateTime dt = --DateTime::Now();
     LendingLoopInformation::calendarCallback(dt, DateTime(), false, data);
 }
 
